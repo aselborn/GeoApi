@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 
 import { swaggerSpec, swaggerUi } from './swagger.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 import smhiRoutes from './routes/smhi.route.js';
 
@@ -20,6 +21,7 @@ app.use(cors({
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api', smhiRoutes);
+app.use(errorHandler);
 
 app.get('/', (req, res) => {
   res.redirect('/api-docs');

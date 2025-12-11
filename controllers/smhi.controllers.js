@@ -6,7 +6,13 @@ export const getTemperature = async (req, res) => {
         const { stationId } = req.params;
         const temperature = await fetchTemperature(stationId);
         
-        res.json({ "stationId": stationId, "temperature": temperature.temperature });
+        res.json(
+            { 
+                "stationId": stationId, 
+                "temperature": temperature.temperature, 
+                "stationsnamn": temperature.stationsnamn 
+            }
+        );
 
 
     } catch (error) {

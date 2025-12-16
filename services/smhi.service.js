@@ -77,4 +77,14 @@ async function stationExists(stationId) {
     }
 }
 
-export { fetchTemperature };
+async function fetchSmhiStations() {
+    // Simulerad funktion för att hämta lista över väderstationer från SMHI
+    // I en riktig implementation skulle du göra ett API-anrop här
+    return [
+        { id: 1, name: 'Station 1' },
+        { id: 2, name: 'Station 2' },
+        { id: 3, name: 'Station 3' },
+    ];
+}
+
+export { fetchTemperature, fetchSmhiStations };

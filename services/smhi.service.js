@@ -6,15 +6,21 @@ async function fetchTemperature(stationId) {
     // I en riktig implementation skulle du göra ett API-anrop här
 
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000); // 5 seconds timeout
+
         
-        let temperaturUrl = config.smhi.smhiApiBaseUrl + config.smhi.smhiTemperatureStation.replace("{}", stationId);
+        let temperaturUrl = config.smhi.smhiApiBaseUrl + config.smhi.smhiSpecificStationPath.replace("{}", stationId);
 
         await stationExists(stationId); 
 
         const response = await fetch(
             temperaturUrl, 
                 { 
-                    headers: { 'Accept': 'application/json', 'User-Agent': 'Node.js' } 
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'GeoApi/1.0'
+                    }
                 }
         );
 
@@ -42,7 +48,14 @@ async function fetchTemperature(stationId) {
         }
 
         console.log('Latest hour data URL:', temperatureDataUrl);
-        const latestHourResponse = await fetch(temperatureDataUrl, { headers: { 'Accept': 'application/json', 'User-Agent': 'Node.js' } });
+        
+        const latestHourResponse = await fetch(temperatureDataUrl, {
+            signal: controller.signal,
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'GeoApi/1.0'
+            }
+        });
         
         const latestHourData = await latestHourResponse.json();
 
@@ -61,7 +74,7 @@ async function fetchTemperature(stationId) {
 async function stationExists(stationId) {
     //finns stationen ?
     let stationUrl = config.smhi.smhiApiBaseUrl + config.smhi.smhiSpecificStationPath.replace("{}", stationId);
-    const response = await fetch(stationUrl);
+    const response = await fetch(stationUrl, { headers: { 'Accept': 'application/json', 'User-Agent': 'Node.js' } });
 
     if (!response.ok || response.status === 500 || response.status === 400) {
         throw new Error('Error fetching data from SMHI API reason =>: ' + response.statusText);
@@ -75,16 +88,86 @@ async function stationExists(stationId) {
     if (!stationData || !stationData.key || stationData.key.length === 0) {
         throw new Error('Station not found or no data available');
     }
+
+    console.log('Station exists:', stationData.key, stationData.title);
+    return true;
 }
 
 async function fetchSmhiStations() {
     // Simulerad funktion för att hämta lista över väderstationer från SMHI
     // I en riktig implementation skulle du göra ett API-anrop här
-    return [
-        { id: 1, name: 'Station 1' },
-        { id: 2, name: 'Station 2' },
-        { id: 3, name: 'Station 3' },
-    ];
+    try {
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 seconds timeout
+
+        let stationsUrl = config.smhi.smhiApiBaseUrl + config.smhi.smhiAllStations;
+
+        const response = await fetch(
+            stationsUrl, 
+                { 
+                    signal: controller.signal,
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'GeoApi/1.0'
+                    }
+                }
+        );
+
+        if (!response.ok) {
+            throw new Error('Error fetching data from SMHI API: ' + response.statusText);
+        }
+
+        const stationsData = await response.json();
+    
+        return stationsData.station.map(station => ({
+            stationId: station.key,
+            stationsnamn: station.title
+        }));
+
+    } catch (error) {
+        console.error('Error fetching SMHI stations:', error);
+        throw new Error(error.message || 'Failed to fetch SMHI stations');
+    }
 }
 
-export { fetchTemperature, fetchSmhiStations };
+async function fetchAllTemperatures() {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 seconds timeout
+
+        let allTemperaturesUrl = config.smhi.smhiApiBaseUrl + config.smhi.smhiAllSwedenLatestHour;
+
+        const response = await fetch(
+            allTemperaturesUrl, 
+                { 
+                    signal: controller.signal,
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'GeoApi/1.0'
+                    }
+                }
+        );
+
+        if (!response.ok) {
+            throw new Error('Error fetching data from SMHI API: ' + response.statusText);
+        }
+
+        const allTemperaturesData = await response.json();
+
+        // Map the data to a more usable format
+        const temperatures = allTemperaturesData.station.map(station => ({
+            stationId: station.key,
+            stationsnamn: station.name,
+            temperature: station.value // Assuming temperature value is in station.value
+        }));
+
+        return temperatures;
+
+    } catch (error) {
+        console.error(error);
+        throw new Error(error.message || 'Failed to fetch all temperatures data');
+    }
+}
+
+export { fetchTemperature, fetchSmhiStations, fetchAllTemperatures };

@@ -1,6 +1,7 @@
 import express from "express";
 import { getTemperature } from "../controllers/smhi.controllers.js";
 import { getSmhiStations } from "../controllers/smhi.controllers.js";
+import { getAllTemperatures } from "../controllers/smhi.controllers.js";
 
 const router = express.Router();
 /**
@@ -25,9 +26,17 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Lyckad förfrågan med stationsdata
+ * 
+ * /api/temperature/all:
+ *   get:
+ *     summary: Hämta senaste timmens temperaturdata för alla väderstationer i Sverige från SMHI
+ *     responses:
+ *       200:
+ *         description: Lyckad förfrågan med temperaturdata för alla stationer
  */
 
 export default router;
 
-router.get('/temperature/:stationId', getTemperature);
 router.get('/temperature/stations', getSmhiStations);
+router.get('/temperature/all', getAllTemperatures);
+router.get('/temperature/:stationId', getTemperature);

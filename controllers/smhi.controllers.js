@@ -1,5 +1,6 @@
 import { fetchTemperature } from "../services/smhi.service.js";
 import { fetchSmhiStations } from "../services/smhi.service.js";
+import { fetchAllTemperatures } from "../services/smhi.service.js";
 
 export const getTemperature = async (req, res) => {
     try {
@@ -29,6 +30,15 @@ export const getSmhiStations = async (req, res) => {
         const stations = await fetchSmhiStations();
 
         res.json(stations);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+} ;
+
+export const getAllTemperatures = async (req, res) => {
+    try {
+        const temperatures = await fetchAllTemperatures();
+        res.json(temperatures);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

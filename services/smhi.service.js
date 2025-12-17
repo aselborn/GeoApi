@@ -1,4 +1,14 @@
 import config from './config.js';
+import {
+    isCacheValid,
+    setStations,
+    getStationById,
+    getStationByName,
+    getAllStations,
+    clearCache
+} from './stationCache.js';
+
+
 
 
 async function fetchTemperature(stationId) {
@@ -94,8 +104,7 @@ async function stationExists(stationId) {
 }
 
 async function fetchSmhiStations() {
-    // Simulerad funktion för att hämta lista över väderstationer från SMHI
-    // I en riktig implementation skulle du göra ett API-anrop här
+    
     try {
         
         const controller = new AbortController();
@@ -122,6 +131,11 @@ async function fetchSmhiStations() {
     
         return stationsData.station.map(station => ({
             stationId: station.key,
+            latitude: station.latitude,
+            longitude: station.longitude,
+            active: station.active,
+            from : station.from,
+            to : station.to,
             stationsnamn: station.title
         }));
 
